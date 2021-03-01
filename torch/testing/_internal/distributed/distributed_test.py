@@ -87,11 +87,13 @@ COLLECTIVES_OBJECT_TEST_LIST = [
 PROFILING_SUPPORTED_BACKENDS = [
     dist.Backend.NCCL,
     dist.Backend.GLOO,
+    dist.Backend.MPI,
 ]
 
 # Allowlist of distributed backends where profiling is supported with use_cuda=True
 CUDA_PROFILING_SUPPORTED_BACKENDS = [
-    dist.Backend.GLOO
+    dist.Backend.GLOO,
+    dist.Backend.MPI,
 ]
 
 # Dummy NamedTuple data structures to test DDP support for NamedTuple types.
@@ -1484,6 +1486,8 @@ class DistributedTest:
                 return [event for event in prof.function_events if event.name.endswith(postfix)]
 
             if expect_event and dist.get_backend() in PROFILING_SUPPORTED_BACKENDS:
+                if self.rank == 0:
+                    print(f"Profiling enabled, prof is {prof.key_averages().table()}")
                 events = get_event(profiling_title_postfix)
                 self.assertEqual(len(events), len(op_calls))
                 for e in events:
